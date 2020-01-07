@@ -33,5 +33,9 @@ CheckSum: 是从cmd 开始到 data结束的一字节校验和 <br>
  **读flah应答格式**<br>
  数据部分的格式 status(1) + R_address(4) + R_size(2)+ DATA(size)  <br>
  status(1): 0 成功， 1 失败. 失败的话后面的读取内容是没有的 <br>
+ 
+ **读ChipID 应答格式** <br>
+ 数据部分的格式 status(1) + ChipID(1) + Version(1)  <br>
+ CC2530 ChipID = 0xA5  version 忽略<br>
 	
 
