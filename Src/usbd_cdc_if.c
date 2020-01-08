@@ -399,12 +399,6 @@ uint16_t in_len = Len[0];
 			 {
 			 	CdcRxStatus = RX_DATA_STATE;
 			  pMsg[LenTemp ++] =  Buf[i];
-				 
-				 if(LenTemp == LenToken)
-				 {
-				 	CdcRxStatus = RX_FCS_STATE;
-				 }
-
 			 }
 			 else
 			 {
@@ -417,7 +411,7 @@ uint16_t in_len = Len[0];
 				 //send msg
 				 //extern uint8_t ByteCalcFCS( uint8_t *msg_ptr, uint8_t len );
 				 
-					if (Buf[i] == ByteCalcFCS(pMsg , LenTemp)	)
+					if (Buf[i] == ByteCheckSum(pMsg , LenTemp)	)
 					{						
 				 	extern QueueHandle_t CdcRxMsg;
 					uint32_t MsgAdd = (uint32_t)pMsg;

@@ -23,7 +23,7 @@ Editor:		      Mr.kon
 /*==============================================================================
 @ Global variable
 */
-extern uint8_t USB_DataRequest(uint8_t cmd, uint8_t* pData, uint16_t lenth);
+extern uint8_t USB_DataRequest(uint8_t cmd, uint8_t* pData, uint16_t lenth, uint8_t sequence);
 
 static void ChipReset(pPROCESS_MSG pMsg);
 static void ChipErase(pPROCESS_MSG pMsg);
@@ -76,14 +76,15 @@ DATA_PARSE_STATUS ParseCmd( pPROCESS_MSG pMsg)
 } 
 
 
-uint8_t chip_info[2];
+uint8_t chip_info[3];
 static void GetChipid(pPROCESS_MSG pMsg)
 {
-	GET_CHIP_ID(&chip_info[0], &chip_info[1]);
+	GET_CHIP_ID(&chip_info[1], &chip_info[2]);
 	
-	USBD_UsrLog("chip_id= %X,chip_rev= %X ", chip_info[0], chip_info[1]);
+	USBD_UsrLog("chip_id= %X,chip_rev= %X ", chip_info[1], chip_info[2]);
+	chip_info[0] = 0x00; 
 	
-	USB_DataRequest(  pMsg->Command | CmdRsp, &chip_info[0], sizeof(chip_info));
+	USB_DataRequest(  pMsg->Command | CmdRsp, &chip_info[0], sizeof(chip_info), pMsg->Sequence);
 }
 	
 uint8_t retry = 0;
@@ -101,20 +102,20 @@ uint8_t retry = 0;
 		
 	
 	uint8_t status = PROCCESS_SUCCESS;
-	USB_DataRequest(  pMsg->Command | CmdRsp, &status, sizeof(status));
+	USB_DataRequest(  pMsg->Command | CmdRsp, &status, sizeof(status), pMsg->Sequence);
 }
 
  static void ChipErase(pPROCESS_MSG pMsg)
 {
   chip_erase();
 	uint8_t status = PROCCESS_SUCCESS;
-	USB_DataRequest(  pMsg->Command | CmdRsp, &status, sizeof(status));
+	USB_DataRequest(  pMsg->Command | CmdRsp, &status, sizeof(status), pMsg->Sequence);
 }
 
 pREAD_FLASH pReadFlash = NULL;
 static void ReadFlashData(pPROCESS_MSG pMsg)
 {
-	if( pMsg->PayoadLenth ==  sizeof( READ_FLASH)+ 3 )
+	if( pMsg->PayoadLenth ==  sizeof( READ_FLASH)+ 4 )
 	{
 		pReadFlash = (pREAD_FLASH)pMsg->Data;
 		/****************************************
@@ -122,16 +123,19 @@ static void ReadFlashData(pPROCESS_MSG pMsg)
 		*****************************************/
 		if(pReadFlash->R_size <=2048 )
 		{
-			uint8_t *	pData = pvPortMalloc( pReadFlash->R_size );
+			pWRITE_FLASH_RSP	pReadRsp = (pWRITE_FLASH_RSP)pvPortMalloc( pReadFlash->R_size + sizeof(u32) + sizeof(u16));
 			
-			if(pData)
+			if(pReadRsp)
 			{
 				// Read 4 bytes starting at flash address 0x0100 (flash bank 0)
-				read_flash_memory_block(pReadFlash->R_address/0x8000, pReadFlash->R_address%0x8000, pReadFlash->R_size, pData); // Bank, address, count, dest.
+				read_flash_memory_block(pReadFlash->R_address/0x8000, pReadFlash->R_address%0x8000, pReadFlash->R_size, pReadRsp->r_data); // Bank, address, count, dest.
 				
 				uint8_t i = 0;
+				pReadRsp->r_status = PROCCESS_SUCCESS;
+				pReadRsp->r_address = pReadFlash->R_address;
+				pReadRsp->r_size  = pReadFlash->R_size;
 				
-				while( ( USB_DataRequest(  pMsg->Command|CmdRsp, pData, pReadFlash->R_size) == USBD_BUSY) && (i <= 3) )
+				while( ( USB_DataRequest(  pMsg->Command|CmdRsp,(uint8_t*)pReadRsp, pReadFlash->R_size + sizeof(WRITE_FLASH_RSP), pMsg->Sequence) == USBD_BUSY) && (i <= 3) )
 				{
 					i ++;
 				}
@@ -139,10 +143,10 @@ static void ReadFlashData(pPROCESS_MSG pMsg)
 				if(i > 3)
 				{
 					uint8_t status = PROCCESS_FAILED;
-					USB_DataRequest(  DefaultRsp, &status, sizeof(status));
+					USB_DataRequest(   pMsg->Command|CmdRsp, &status, sizeof(status), pMsg->Sequence);
 				}
 				
-				vPortFree(pData);
+				vPortFree(pReadRsp);
 			}
 		}
 		
@@ -156,7 +160,7 @@ static void WriteFlashData(pPROCESS_MSG pMsg)
 	pWdata = (pWRITE_FLASH)pMsg->Data;
 	uint8_t status ;
 
-	if( pMsg->PayoadLenth ==  pWdata->W_size+ 9)
+	if( pMsg->PayoadLenth ==  pWdata->W_size+ 10)
 	{
 			/****************************************
 	* Write FLASH memory
@@ -197,8 +201,6 @@ static void WriteFlashData(pPROCESS_MSG pMsg)
 						if(pData[i] != pWdata->W_data[i])
 							{
 								status = PROCCESS_FAILED;
-								
-								USBD_UsrLog("Verify Failed");
 								break;
 							}
 							
@@ -206,10 +208,14 @@ static void WriteFlashData(pPROCESS_MSG pMsg)
 				vPortFree(pData);
 				
 			}
+			else
+			{
+				status = PROCCESS_FAILED;
+			}
 			
+			USBD_UsrLog("Verify status= %d", status);
 			
-			
-				USB_DataRequest(  pMsg->Command | CmdRsp, &status, sizeof(status));
+				USB_DataRequest(  pMsg->Command | CmdRsp, &status, sizeof(status), pMsg->Sequence );
 	}
 }
 

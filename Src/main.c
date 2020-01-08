@@ -303,20 +303,21 @@ uint8_t USB_Send_Data(uint8_t* pData, uint16_t lenth)
      return USBD_CDC_TransmitPacket(&hUsbDeviceFS);
 }
 
-uint8_t USB_DataRequest(uint8_t cmd, uint8_t* pData, uint16_t lenth)
+uint8_t USB_DataRequest(uint8_t cmd, uint8_t* pData, uint16_t lenth, uint8_t sequence)
 {
 	USBSendBuf[0] = 0xFE;
 	USBSendBuf[1] = cmd;
-	USBSendBuf[2] = lenth + 3;//1 byte CMD + 2byte Lenth
-	USBSendBuf[3] = (lenth + 3)>>8;//1 byte CMD + 2byte Lenth
+	USBSendBuf[2] = lenth + 4;//1 byte CMD + 2byte Lenth
+	USBSendBuf[3] = (lenth + 4)>>8;//1 byte CMD + 2byte Lenth
+	USBSendBuf[4] = sequence;
 	
 	if(lenth)
 	{
-		memcpy(&USBSendBuf[4], pData,  lenth);
+		memcpy(&USBSendBuf[5], pData,  lenth);
 	}
-	USBSendBuf[ lenth +1 + 3 ] = ByteCalcFCS(&USBSendBuf[1],lenth + 3 );
+	USBSendBuf[ lenth + 4 + 1 ] = ByteCheckSum(&USBSendBuf[1],lenth + 4 );
 	
-	return USB_Send_Data(USBSendBuf ,lenth + 5 );
+	return USB_Send_Data(USBSendBuf ,lenth + 6 );
 }
 /* USER CODE END 4 */
 

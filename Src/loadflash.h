@@ -96,6 +96,7 @@ typedef struct PROCESS_MSG_
 {
   Procees_Cmd  Command;
   u16  PayoadLenth;//payload data size include CRC16 
+	u8  Sequence;
   u8  Data[MAX_DATA_SIZE]; 
 } PROCESS_MSG,*pPROCESS_MSG;
 
@@ -106,6 +107,7 @@ typedef struct  READ_FLASH_
 {
 	u32 R_address;
 	u16 R_size;
+
 	
 }READ_FLASH, *pREAD_FLASH;
 
@@ -116,6 +118,13 @@ typedef struct  WRITE_FLASH_
 	u8  W_data[];
 }WRITE_FLASH, *pWRITE_FLASH;
 
+typedef struct  WRITE_FLASH_RSP_
+{
+	u8 r_status;
+	u32 r_address;
+	u16 r_size;
+	u8  r_data[];
+}WRITE_FLASH_RSP, *pWRITE_FLASH_RSP;
 /************Data Parse Status*******************/
 typedef enum
 {
