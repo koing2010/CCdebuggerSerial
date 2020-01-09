@@ -58,5 +58,15 @@ numbyte(1)  指令的操作数据的个数<br>
 ## 2 **功能测试**<br>
 ### 2.1 IO 功能测试<br>
 指令格式： DebugCmd + CMD(1) + numbyte(1)+ bytes(1-3)<br>
+ IO 方向控制寄存器地址  <br>
+ P0DIR:  0xFD    <br> P1DIR:  0xFE  <br>   P2DIR:  0xFF <br>   
+
+ IO 输入输出寄存器地址  <br>
+ P0:  0x80    <br> P1:  0x90  <br>   P2:  0xA0 <br>  
+例: 把P0DIR全部设置为输出，P0_IO 全部输出1. 指令格式如下<br>
+
+ 设置方向： DebugCmd + 0x57(cmd) + 0x03(num) + 0x75(MOV direct,#data ) + 0xFD(direct) + 0xFF(data) <br>
+0xFD对应 P0DIR地址， 0xFF是设置参数 <br>
+ 
  
 <br><br>
