@@ -11,30 +11,40 @@ GetChipIDCmd = 0x05 <br>
 GetChipIDCmdRsp = 0x85 <br>
 <br>
 #  2 **协议格式**  <br>
-### 1 <br>
+## 1 <br>
 FrameStart(1byte) + Cmd(1)  +  lenth(2) + sequence(1) + data(n) + CheckSum(1)  <br>
 0xFE + CMD + lenth(地位在前高位在后) + sequence(帧序号)  + data(可有可无)  <br>
 
 数据长度： lenth = cmd(1) + lenth(2) +  sequence(1) + n = 4 + n  <br>
 CheckSum: 是从cmd 开始到 data结束的一字节校验和 <br>
 <br>
-### 2  具体说明 <br>
- **ResetCmd，EraseFullChipCmd 和GetChipIDCmd 没有数据部分就是单纯的执行** <br>
+## 2  具体说明 <br>
+### 2.1 **ResetCmd，EraseFullChipCmd 和GetChipIDCmd 没有数据部分就是单纯的执行** <br>
  FE + 0x01 + 0x04  0x00 + 0x01 + CheckSum  (没有数据部分所以n = 0)<br>
- **写flah格式**<br>
+### 2.2  **写flah格式**<br>
  数据部分的格式 W_address(4) + W_size(2) + W_data(x) <br>
  往地址0x0080 写 1024 字节如下 <br>
  0xFE  03 00 00 01 80 00 00 00 00 04 + DATA(1024) + CheckSum <br>
- **写flah应答格式格式**<br>
+### 2.3 **写flah应答格式格式**<br>
   数据部分的格式: status(1)
  
- **读flah格式**<br>
+### 2.4 **读flah格式**<br>
  数据部分的格式 R_address(4) + R_size(2) <br>
- **读flah应答格式**<br>
+### 2.5  **读flah应答格式**<br>
  数据部分的格式 status(1) + R_address(4) + R_size(2)+ DATA(size)  <br>
  status(1): 0 成功， 1 失败. 失败的话后面的读取内容是没有的 <br>
  
- **读ChipID 应答格式** <br>
+### 2.6  **调试指令** <br> 
+数据部分的格式： CMD(1) + numbyte(1)+ bytes(1-3) <br>
+CMD 是写入的调试指令 <br>
+numbyte(1)  指令的操作数据的个数<br>
+ bytes(1-3)  指令的操作数据，个数是1~3个<br> <br>
+应答格式: status(1) + byte(1) <br>
+调试指令的应答是，有返回数据的指令，则返回应答指令执行结果。无返回数据的指令，可以忽略这一位的数据  <br>
+ 
+ 
+ 
+ ### 2.7   **读ChipID 应答格式** <br>
  数据部分的格式 status(1) + ChipID(1) + Version(1)  <br>
  CC2530 ChipID = 0xA5  version 忽略<br>
 	
