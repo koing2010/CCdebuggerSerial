@@ -68,17 +68,17 @@ numbyte(1)  指令的操作数据的个数<br>
 0x55一字节调试指令 0x56 两字节调试指令  0x57三字节调试指令 <br>
 例: 把P0DIR全部设置为输出，P0_IO 全部输出1. 指令格式如下<br>
 
- #### a 设置方向： <br>
+ #### a. 设置方向： <br>
  DebugCmd + 0x57(cmd) + 0x03(num) + 0x75(MOV direct,#data ) + 0xFD(direct) + 0xFF(data) <br>
 0xFD对应 P0DIR地址， 0xFF是设置参数 ,返回值可以忽略 <br>
 
-#### b 设置IO输出： <br> 
+#### b. 设置IO输出： <br> 
 DebugCmd + 0x57(cmd) + 0x03(num) + 0x75(MOV direct,#data ) + 0x80(direct) + 0xFF(data) <br>
 0x80对应 P0_IO的地址， 0xFF是设置参数 ,返回值可以忽略 <br>
 
-#### c 将a中 P0DIR 地址写入0x00,则P0设置为输入模式 <br>
+#### c. 将a中 P0DIR 地址写入0x00,则P0设置为输入模式 <br>
 
-#### d 读取IO输出： <br>
+#### d. 读取IO输出： <br>
 DebugCmd + 0x56(cmd) + 0x02(num) + 0xE5(MOV A,direct ) + 0x80(direct) <br>
 0x80对应 P0_IO的地址， 返回值就是当前IO输入的状态 <br>
 
