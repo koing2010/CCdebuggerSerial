@@ -32,10 +32,14 @@ static void ReadFlashData(pPROCESS_MSG pMsg);
 static void WriteFlashData(pPROCESS_MSG pMsg);
 static void GetChipid(pPROCESS_MSG pMsg);
 
+static void WriteXdata(pPROCESS_MSG pMsg);
+static void ReadXdata(pPROCESS_MSG pMsg);
+
+static void DebugCmd(pPROCESS_MSG pMsg);
+
 #define SINGLE_REQ_SIZE           128
 #define REQ_BINDATA_CMD           0x02
 #define RSP_BINDATA_CMD           0x82
-
 
 
 /*==============================================================================
@@ -44,15 +48,17 @@ static void GetChipid(pPROCESS_MSG pMsg);
 static 
 
 
-#define MAX_FUNCTION_CMD  5
+#define MAX_FUNCTION_CMD  8
 pDEBUG_FUNCTION_t DebugFunctionCB[MAX_FUNCTION_CMD]=
 {
 	ChipReset,      //ResetCmd=0x01,
 	ReadFlashData,  //ReadFlashDataCmd = 0x02,
 	WriteFlashData, //WriteFlashCmd = 0x03,
 	ChipErase,		  //EraseFullChipCmd = 0x04,
-	GetChipid			  //GetChipIDCmd = 0x05,
-
+	GetChipid,			 //GetChipIDCmd = 0x05,
+	WriteXdata,
+	ReadXdata,
+	DebugCmd
 };
 
 /*******************************************************************************
@@ -94,8 +100,8 @@ uint8_t retry = 0;
 	DEBUG_INIT();
 	
 	osDelay(10);
-	write_xdata_memory(DUP_CLKCONCMD, 0x80);
-  while (read_xdata_memory(DUP_CLKCONSTA) != 0x80 && retry ++ < 16)
+	write_xdata_memory(DUP_CLKCONCMD, 0x40);
+  while (read_xdata_memory(DUP_CLKCONSTA) != 0x40 && retry ++ < 16)
 	{	
 		osDelay(10);
 	}
@@ -219,6 +225,47 @@ static void WriteFlashData(pPROCESS_MSG pMsg)
 	}
 }
 
+pWRITE_XDATA pWmsg;
+static void WriteXdata(pPROCESS_MSG pMsg)
+{
+	uint8_t status = PROCCESS_SUCCESS;
+	pWRITE_XDATA pWmsg = (pWRITE_XDATA)pMsg->Data;
+	if(pMsg->PayoadLenth ==  7)
+	{
+		write_xdata_memory(pWmsg->w_address,pWmsg->w_Data);
+		
+		USB_DataRequest(  pMsg->Command | CmdRsp, &status, sizeof(status), pMsg->Sequence );
+	}
+	else
+	{
+	 status = PROCCESS_FAILED;
+	 USB_DataRequest(  pMsg->Command | CmdRsp, &status, sizeof(status), pMsg->Sequence );
+	}
+}
+
+
+	pDEBUG_CMD pDebugMsg;
+  uint8_t r_data[2];
+static void DebugCmd(pPROCESS_MSG pMsg)
+{
+		pDebugMsg =  (pDEBUG_CMD)pMsg->Data;
+
+    r_data[1] = debug_command(pDebugMsg->d_cmd,  pDebugMsg->d_data, pDebugMsg->d_numbytes);
+	  r_data[0] = 0;
+
+	  USB_DataRequest(  pMsg->Command | CmdRsp, &r_data[0], sizeof(r_data), pMsg->Sequence );
+}
+
+uint8_t r_data[2];
+static void ReadXdata(pPROCESS_MSG pMsg)
+{
+		if(pMsg->PayoadLenth ==  6)
+		{
+			r_data[0] = 0;
+			r_data[1] = read_xdata_memory(*(uint16_t*)pMsg->Data);
+			USB_DataRequest(  pMsg->Command | CmdRsp, &r_data[0], sizeof(r_data), pMsg->Sequence );
+		}
+}
 /*********************************************************************************
 Function:  ModBus_CRC16
 Description:

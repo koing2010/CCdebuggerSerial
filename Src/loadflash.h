@@ -56,6 +56,10 @@ typedef enum
 	EraseFullChipRspCmd = 0x84,
 	GetChipIDCmd = 0x05,
 	GetChipIDCmdRsp = 0x85,
+	WriteXdataCmd = 0x06,
+	WriteXdataRspCmd = 0x86,
+	ReadXdataCmd= 0x07,
+	ReadXdataRspCmd= 0x87,
 	DefaultRsp = 0x8F   //defaultRsp indicator of rsp
 	
 } Procees_Cmd;
@@ -125,6 +129,20 @@ typedef struct  WRITE_FLASH_RSP_
 	u16 r_size;
 	u8  r_data[];
 }WRITE_FLASH_RSP, *pWRITE_FLASH_RSP;
+
+typedef struct  WRITE_XDATA_
+{
+	u16 w_address;
+	u8  w_Data;
+}WRITE_XDATA, *pWRITE_XDATA;
+
+typedef struct  DEBUG_CMD_
+{
+	u8 d_cmd;
+	u8 d_numbytes;
+	u8 d_data[];
+	
+}DEBUG_CMD, *pDEBUG_CMD;
 /************Data Parse Status*******************/
 typedef enum
 {
