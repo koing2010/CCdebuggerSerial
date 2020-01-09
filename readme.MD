@@ -9,6 +9,8 @@ EraseFullChipCmd = 0x04 <br>
 EraseFullChipRspCmd = 0x84 <br>
 GetChipIDCmd = 0x05 <br>
 GetChipIDCmdRsp = 0x85 <br>
+DebugCmd = 0x08 <br>
+DebugRspCmd = 0x88 <br>
 <br>
 #  二 **协议格式**  <br>
 ## 1 **格式Frame**<br>
@@ -26,10 +28,11 @@ CheckSum: 是从cmd 开始到 data结束的一字节校验和 <br>
  往地址0x0080 写 1024 字节如下 <br>
  0xFE  03 00 00 01 80 00 00 00 00 04 + DATA(1024) + CheckSum <br>
 ### 2.3 **写flah应答格式格式**<br>
-  数据部分的格式: status(1)
+  数据部分的格式: status(1)<br>
  
 ### 2.4 **读flah格式**<br>
  数据部分的格式 R_address(4) + R_size(2) <br>
+ 
 ### 2.5  **读flah应答格式**<br>
  数据部分的格式 status(1) + R_address(4) + R_size(2)+ DATA(size)  <br>
  status(1): 0 成功， 1 失败. 失败的话后面的读取内容是没有的 <br>
@@ -53,4 +56,7 @@ numbyte(1)  指令的操作数据的个数<br>
 连接待变成设备(DUP),先调用 RESET 指令，让模块进入debug模式，读取chipID,确定芯片型号<br>
 <br>
 ## 2 **功能测试**<br>
-### 2.1 <br>
+### 2.1 IO 功能测试<br>
+指令格式： DebugCmd + CMD(1) + numbyte(1)+ bytes(1-3)<br>
+ 
+<br><br>
