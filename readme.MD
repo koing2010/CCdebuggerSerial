@@ -38,7 +38,7 @@ CheckSum: 是从cmd 开始到 data结束的一字节校验和 <br>
  status(1): 0 成功， 1 失败. 失败的话后面的读取内容是没有的 <br>
  
 ### 2.6  **调试指令** <br> 
-数据部分的格式： CMD(1) + numbyte(1)+ bytes(1-3) <br>
+数据部分的格式： CMD(1) + bytes(1-3) <br>
 CMD 是写入的调试指令 <br>
 numbyte(1)  指令的操作数据的个数<br>
  bytes(1-3)  指令的操作数据，个数是1~3个<br> <br>
@@ -56,6 +56,8 @@ numbyte(1)  指令的操作数据的个数<br>
 连接待变成设备(DUP),先调用 RESET 指令，让模块进入debug模式，读取chipID,确定芯片型号<br>
 <br>
 ## 2 **功能测试**<br>
+ CM 单片机调试接口指令  <br>
+0x55一字节调试指令 0x56 两字节调试指令  0x57三字节调试指令 <br>
 ### 2.1 IO 功能测试<br>
 指令格式： DebugCmd + CMD(1)+ bytes(1-3)<br>
  IO 方向控制寄存器地址  <br>
@@ -63,17 +65,15 @@ numbyte(1)  指令的操作数据的个数<br>
 
  IO 输入输出寄存器地址  <br>
  P0:  0x80    <br> P1:  0x90  <br>   P2:  0xA0 <br>  
- 
-  CM 单片机调试接口指令  <br>
-0x55一字节调试指令 0x56 两字节调试指令  0x57三字节调试指令 <br>
+
 例: 把P0DIR全部设置为输出，P0_IO 全部输出1. 指令格式如下<br>
 
  #### a. 设置方向： <br>
- DebugCmd + 0x57(cmd) + 0x03(num) + 0x75(MOV direct,#data ) + 0xFD(direct) + 0xFF(data) <br>
+ DebugCmd + 0x57(cmd) + 0x75(MOV direct,#data ) + 0xFD(direct) + 0xFF(data) <br>
 0xFD对应 P0DIR地址， 0xFF是设置参数 ,返回值可以忽略 <br>
 
 #### b. 设置IO输出： <br> 
-DebugCmd + 0x57(cmd) + 0x03(num) + 0x75(MOV direct,#data ) + 0x80(direct) + 0xFF(data) <br>
+DebugCmd + 0x57(cmd) + 0x75(MOV direct,#data ) + 0x80(direct) + 0xFF(data) <br>
 0x80对应 P0_IO的地址， 0xFF是设置参数 ,返回值可以忽略 <br>
 
 #### c. 将a中 P0DIR 地址写入0x00,则P0设置为输入模式 <br>
